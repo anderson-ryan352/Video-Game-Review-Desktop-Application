@@ -63,7 +63,6 @@ def homePage(cnx):
 
 
 		cnx.close()
-		homePage.mainloop()
 
 
 ###########Login page###########
