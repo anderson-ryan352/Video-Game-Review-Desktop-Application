@@ -6,7 +6,6 @@ from mysql.connector import errorcode
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("dark-blue")
 
-
 #Connects to mysql database with user input login info
 def login():
 
@@ -29,6 +28,19 @@ def login():
 			print(err)
 	else:
 
+		#Successful Connection
+		homePage(cnx)
+
+
+
+def homePage(cnx):
+		loginFrame.destroy()
+		window.geometry("1000x600")
+		homePage = ctk.CTkFrame(master=window)
+		homePage.pack(pady=20, padx=60, fill = "both", expand = True)
+
+		welcomeLabel = ctk.CTkLabel(master = homePage, text = "Welcome!", font = ('calibre',30,'bold'))
+		welcomeLabel.pack(pady=12,padx=10)
 		#Successful Connection Test Actions
 		# prepare a cursor object using cursor() method
 		cursor = cnx.cursor()
@@ -38,40 +50,43 @@ def login():
 
 		# Fetch a single row using fetchone() method.
 		data = cursor.fetchone()
-		print("Database version : %s " % data)
+
+		testVersion = ctk.CTkLabel(master=homePage, text = "Database Version: %s " % data, font = ('calibre',10,'bold'))
+		testVersion.pack(pady=12, padx=10)
+
 
 		cursor.execute("SELECT * FROM gamelist")
 		data = cursor.fetchone()
-		print(data)
+
+		testDataLabel = ctk.CTkLabel(master=homePage, text = data, font = ('calibre',10,'bold'))
+		testDataLabel.pack(pady=12, padx=10)
+
 
 		cnx.close()
-
-
-
-
-
-window = ctk.CTk()
-window.title("Videogame Review App")
-window.geometry("600x400")
-
-frame = ctk.CTkFrame(master=window)
-frame.pack(pady=20, padx=60, fill = "both", expand = True)
+		homePage.mainloop()
 
 
 ###########Login page###########
 
-loginLabel = ctk.CTkLabel(master=frame, text = 'Login System', font=('calibre',30,'bold'))
+window = ctk.CTk()
+window.title("Video Game Review App")
+window.geometry("600x400")
+
+loginFrame = ctk.CTkFrame(master=window)
+loginFrame.pack(pady=20, padx=60, fill = "both", expand = True)
+
+
+loginLabel = ctk.CTkLabel(master=loginFrame, text = "Login System", font=('calibre',30,'bold'))
 loginLabel.pack(pady=12, padx=10)
 
-accountEntry = ctk.CTkEntry(master=frame, placeholder_text = "Username", font=('calibre',10,'bold'))
+accountEntry = ctk.CTkEntry(master=loginFrame, placeholder_text = "Username", font=('calibre',10,'bold'))
 accountEntry.pack(pady=12, padx=10)
 
-passwordEntry = ctk.CTkEntry(master=frame, placeholder_text = "Password", font=('calibre',10,'bold'), show="*")
+passwordEntry = ctk.CTkEntry(master=loginFrame, placeholder_text = "Password", font=('calibre',10,'bold'), show="*")
 passwordEntry.pack(pady=12, padx=10)
 
-loginButton = ctk.CTkButton(master=frame, text = "Login", command = login)
+loginButton = ctk.CTkButton(master=loginFrame, text = "Login", command = login)
 loginButton.pack(pady=12, padx=10)
-
 
 
 #infinite window refresh
