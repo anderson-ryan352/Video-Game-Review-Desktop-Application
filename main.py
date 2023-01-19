@@ -6,44 +6,76 @@ from mysql.connector import errorcode
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("dark-blue")
 
-#Connects to mysql database with user input login info
-def login():
 
-	usr = accountEntry.get()
-	pswd = passwordEntry.get()
-	try:
-		print("Connecting to database using mysql")
-		cnx = mysql.connector.connect(user=usr,
-										password=pswd,
-										host='localhost',
-										database='videogames')
+class App(ctk.CTk):
+	width = 600
+	height = 400
+	cnx = None
 
-		print("Succesfully Connected to database using MySQLdb!")
-	except mysql.connector.Error as err:
-		if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-			print("Invalid username or password")
-		elif err.errno == errorcode.ER_BAD_DB_ERROR:
-			print("Database does not exist")
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+		self.title("Video Game Review App")
+		self.geometry(f"{self.width}x{self.height}")
+
+
+		################Login Frame############
+		self.loginFrame = ctk.CTkFrame(self)
+		self.loginFrame.pack(pady=20, padx=60, fill = "both", expand = True)
+
+
+		self.loginLabel = ctk.CTkLabel(master=self.loginFrame, text = "Login System", font=('calibre',30,'bold'))
+		self.loginLabel.pack(pady=12, padx=10)
+
+		self.accountEntry = ctk.CTkEntry(master=self.loginFrame, placeholder_text = "Username", font=('calibre',10,'bold'))
+		self.accountEntry.pack(pady=12, padx=10)
+
+		self.passwordEntry = ctk.CTkEntry(master=self.loginFrame, placeholder_text = "Password", font=('calibre',10,'bold'), show="*")
+		self.passwordEntry.pack(pady=12, padx=10)
+
+		self.loginButton = ctk.CTkButton(master=self.loginFrame, text = "Login", command = self.loginEvent)
+		self.loginButton.pack(pady=12, padx=10)
+
+
+
+	########Login Event##################
+	def loginEvent(self):
+
+		usr = self.accountEntry.get()
+		pswd = self.passwordEntry.get()
+		try:
+			print("Connecting to database using mysql")
+			cnx = mysql.connector.connect(user=usr,
+											password=pswd,
+											host='localhost',
+											database='videogames')
+
+			print("Succesfully Connected to database using MySQLdb!")
+		except mysql.connector.Error as err:
+			if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+				print("Invalid username or password")
+			elif err.errno == errorcode.ER_BAD_DB_ERROR:
+				print("Database does not exist")
+			else:
+				print(err)
 		else:
-			print(err)
-	else:
 
-		#Successful Connection
-		homePage(cnx)
+			#Successful Connection
+			self.cnx = cnx
+			self.loginFrame.destroy()
+			self.homePage()
 
-
-
-def homePage(cnx):
-		loginFrame.destroy()
-		window.geometry("1000x600")
-		homePage = ctk.CTkFrame(master=window)
+	#Connects to mysql database with user input login info
+	def homePage(self):
+		self.width = 1000
+		self.height = 600
+		homePage = ctk.CTkFrame(self)
 		homePage.pack(pady=20, padx=60, fill = "both", expand = True)
 
 		welcomeLabel = ctk.CTkLabel(master = homePage, text = "Welcome!", font = ('calibre',30,'bold'))
 		welcomeLabel.pack(pady=12,padx=10)
 		#Successful Connection Test Actions
 		# prepare a cursor object using cursor() method
-		cursor = cnx.cursor()
+		cursor = self.cnx.cursor()
 
 		# execute SQL query using execute() method.
 		cursor.execute("SELECT VERSION()")
@@ -62,33 +94,12 @@ def homePage(cnx):
 		testDataLabel.pack(pady=12, padx=10)
 
 
-		cnx.close()
+		self.cnx.close()
 
 
-###########Login page###########
 
-window = ctk.CTk()
-window.title("Video Game Review App")
-window.geometry("600x400")
-
-loginFrame = ctk.CTkFrame(master=window)
-loginFrame.pack(pady=20, padx=60, fill = "both", expand = True)
-
-
-loginLabel = ctk.CTkLabel(master=loginFrame, text = "Login System", font=('calibre',30,'bold'))
-loginLabel.pack(pady=12, padx=10)
-
-accountEntry = ctk.CTkEntry(master=loginFrame, placeholder_text = "Username", font=('calibre',10,'bold'))
-accountEntry.pack(pady=12, padx=10)
-
-passwordEntry = ctk.CTkEntry(master=loginFrame, placeholder_text = "Password", font=('calibre',10,'bold'), show="*")
-passwordEntry.pack(pady=12, padx=10)
-
-loginButton = ctk.CTkButton(master=loginFrame, text = "Login", command = login)
-loginButton.pack(pady=12, padx=10)
-
-
-#infinite window refresh
-window.mainloop()
+if __name__ == "__main__":
+	app = App()
+	app.mainloop()
 
 
