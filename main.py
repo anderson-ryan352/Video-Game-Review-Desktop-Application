@@ -97,11 +97,27 @@ class App(ctk.CTk):
 		for game in data:
 			testDataLabel = ctk.CTkLabel(master=self.homePage, text = game, font = ('calibre',10,'bold'))
 			testDataLabel.pack(pady=12, padx=10)
+			deleteGameButton = ctk.CTkButton(master=self.homePage, text = "-", command = lambda:self.deleteGame(game))
+			deleteGameButton.pack(pady=0, padx=2)
 
 
 		self.newGameButton = ctk.CTkButton(master=self.homePage, text = "Add Game", command = lambda:self.loadSubmitNewGame())
 		self.newGameButton.pack(pady=12, padx=10)
 
+	def deleteGame(self, game):
+
+		self.cursor.reset()
+		remove_game = ("DELETE FROM gamelist WHERE id = %s")
+
+		try:
+			self.cursor.execute(remove_game, (game[0],))
+			self.cnx.commit()
+		except mysql.connector.Error as err:
+			print(err)
+		else:
+			self.homePage.destroy()#refreshing home page
+			self.loadHomePage()
+		
 
 	def loadSubmitNewGame(self):
 		self.homePage.destroy()
@@ -129,20 +145,20 @@ class App(ctk.CTk):
 
 
 	def submitNewGame(self, name, platform, year):
-			self.cursor.reset()
-			gameData = (name, platform, year)
-			add_Game = ("INSERT INTO gamelist "
-						"(name, platform, release_year) "
-						"VALUES (%s, %s, %s)")
-			try:
-				self.cursor.execute(add_Game, gameData)
-				self.cnx.commit()
+		self.cursor.reset()
+		gameData = (name, platform, year)
+		add_Game = ("INSERT INTO gamelist "
+					"(name, platform, release_year) "
+					"VALUES (%s, %s, %s)")
+		try:
+			self.cursor.execute(add_Game, gameData)
+			self.cnx.commit()
 
-			except mysql.connector.Error as err:
-				print(err)
-			else:
-				self.submitPage.destroy()
-				self.loadHomePage()
+		except mysql.connector.Error as err:
+			print(err)
+		else:
+			self.submitPage.destroy()
+			self.loadHomePage()
 
 	def clearWidgets(self, frame):
 		for widget in frame.winfo_children():
