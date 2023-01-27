@@ -70,7 +70,8 @@ class App(ctk.CTk):
 
 	#Connects to mysql database with user input login info
 	def loadHomePage(self):
-
+		if self.submitPage:
+			self.submitPage.destroy()
 		self.homePage = ctk.CTkFrame(self)
 		self.cursor.reset()
 
@@ -118,6 +119,11 @@ class App(ctk.CTk):
 
 		submitButton = ctk.CTkButton(master = self.submitPage, text = "Submit", command = lambda:self.submitNewGame(gameNameEntry.get(), platformEntry.get(), releaseYearEntry.get()))
 		submitButton.pack(pady=12, padx=10)
+
+
+		backButton = ctk.CTkButton(master = self.submitPage, text = "Back", command = lambda: self.loadHomePage())
+		backButton.pack(pady=12, padx=10)
+
 
 
 	def submitNewGame(self, name, platform, year):
