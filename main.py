@@ -91,10 +91,12 @@ class App(ctk.CTk):
 
 		#Displaying first game from database
 		self.cursor.execute("SELECT * FROM gamelist")
-		data = self.cursor.fetchone()
 
-		testDataLabel = ctk.CTkLabel(master=self.homePage, text = data, font = ('calibre',10,'bold'))
-		testDataLabel.pack(pady=12, padx=10)
+		
+		data = self.cursor.fetchall()
+		for game in data:
+			testDataLabel = ctk.CTkLabel(master=self.homePage, text = game, font = ('calibre',10,'bold'))
+			testDataLabel.pack(pady=12, padx=10)
 
 
 		self.newGameButton = ctk.CTkButton(master=self.homePage, text = "Add Game", command = lambda:self.loadSubmitNewGame())
