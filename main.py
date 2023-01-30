@@ -121,6 +121,7 @@ class MainPage(ctk.CTkFrame):
 		self.testVersion = ctk.CTkLabel(master = self, text = "", font = ('calibre',10,'bold'))
 		self.testVersion.grid(row = 1, column = 0)
 
+		self.gameProfileButton = ctk.CTkButton(self)
 
 
 
@@ -132,8 +133,15 @@ class MainPage(ctk.CTkFrame):
 
 	def loadMainPage(self, controller):
 		if App.getCnx(controller):
+			
+			#All game profile buttons destroyed so they can be refreshed in case any are deleted
+			for widgets in self.winfo_children():
+				if widgets == self.gameProfileButton:
+					widgets.destroy()
+
 			curs = App.getCursor(controller)
 			curs.execute("SELECT VERSION()")
+
 			dataVer = curs.fetchone()
 			self.testVersion.configure(text= "Database Version: %s " % dataVer)
 
@@ -150,11 +158,6 @@ class MainPage(ctk.CTkFrame):
 				self.gameProfileButton.grid(row = self.r, column = self.c)
 
 				self.r +=1
-
-
-
-
-
 
 
 
@@ -220,9 +223,20 @@ class GameProfilePage(ctk.CTkFrame):
 		self.releaseYearLabel = ctk.CTkLabel(master=self, text = "", font=('calibre',30,'bold'))
 		self.releaseYearLabel.pack(pady=12, padx=10)
 
+		self.gameIDLabel = ctk.CTkLabel(master=self, text = "", font=('calibre',30,'bold'))
+		self.gameIDLabel.pack(pady=12, padx=10)
+
 
 		#TODO
 		#Add textbox for bio, label for review score, button for new review
+		deleteGameButton = ctk.CTkButton(
+			self,
+			text = "DELETE",
+			command=lambda: self.deleteGame(controller, self.gameIDLabel.cget("text"))
+		)
+		deleteGameButton.pack(side="bottom", fill = ctk.X)
+
+
 
 		backButton = ctk.CTkButton(
 			self,
@@ -231,12 +245,30 @@ class GameProfilePage(ctk.CTkFrame):
 		)
 		backButton.pack(side="bottom", fill=ctk.X)
 
+	def deleteGame(self, controller, game):
+
+		if App.getCnx(controller):
+			remove_game = ("DELETE FROM gamelist WHERE id = %s")
+			try:
+				curs = App.getCursor(controller)
+				curs.execute(remove_game, (game,))
+				controller.cnx.commit()
+
+			except mysql.connector.Error as err:
+				print(err)
+			else:
+				MainPage.loadMainPage(controller.frames[MainPage], controller)
+				App.show_frame(controller, MainPage)
+				
+
+
 
 	def loadGameProfilePage(self, controller, game):
 		if App.getCnx(controller):
 			self.gameTitleLabel.configure(text= (game[1],))
 			self.platformLabel.configure(text = (game[3],))
 			self.releaseYearLabel.configure(text = (game[4],))
+			self.gameIDLabel.configure(text=game[0])
 			#TODO
 			#Fetch and configure game profile bio, reviews
 			App.show_frame(controller, GameProfilePage)
