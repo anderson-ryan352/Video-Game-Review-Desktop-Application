@@ -115,11 +115,11 @@ class MainPage(ctk.CTkFrame):
 		ctk.CTkFrame.__init__(self,parent)
 		self.parent = parent
 		label= ctk.CTkLabel(self,text="Main Page")
-		label.pack(padx=10, pady=10)
+		label.grid(row = 0, column = 0)
 		
 
 		self.testVersion = ctk.CTkLabel(master = self, text = "", font = ('calibre',10,'bold'))
-		self.testVersion.pack(padx=10, pady=10)
+		self.testVersion.grid(row = 1, column = 0)
 
 
 
@@ -128,7 +128,7 @@ class MainPage(ctk.CTkFrame):
 										text = "Submit new game",
 										command=lambda: App.show_frame(controller, SubmitNewGamePage),
 										)
-		submitNewGameButton.pack(side="bottom", fill=ctk.X)
+		submitNewGameButton.grid(row = 2, column = 0)
 
 	def loadMainPage(self, controller):
 		if App.getCnx(controller):
@@ -141,9 +141,15 @@ class MainPage(ctk.CTkFrame):
 
 			gameData = curs.fetchall()
 			strText = []
+			self.r, self.c = 0, 1
 			for game in gameData:
-				gameLabel = ctk.CTkLabel(master = self, text = game, font = ('calibre',10,'bold'))
-				gameLabel.pack(padx=10,pady=10)
+				self.gameProfileButton = ctk.CTkButton(master = self,
+												 text = game,
+												 font = ('calibre',10,'bold'),
+												 command= lambda game = game: GameProfilePage.loadGameProfilePage(controller.frames[GameProfilePage], controller, game))
+				self.gameProfileButton.grid(row = self.r, column = self.c)
+
+				self.r +=1
 
 
 
@@ -214,12 +220,29 @@ class GameProfilePage(ctk.CTkFrame):
 		self.releaseYearLabel = ctk.CTkLabel(master=self, text = "", font=('calibre',30,'bold'))
 		self.releaseYearLabel.pack(pady=12, padx=10)
 
+
+		#TODO
+		#Add textbox for bio, label for review score, button for new review
+
 		backButton = ctk.CTkButton(
 			self,
 			text="Go to Main Page",
 			command=lambda: App.show_frame(controller, MainPage),
 		)
 		backButton.pack(side="bottom", fill=ctk.X)
+
+
+	def loadGameProfilePage(self, controller, game):
+		if App.getCnx(controller):
+			self.gameTitleLabel.configure(text= (game[1],))
+			self.platformLabel.configure(text = (game[3],))
+			self.releaseYearLabel.configure(text = (game[4],))
+			#TODO
+			#Fetch and configure game profile bio, reviews
+			App.show_frame(controller, GameProfilePage)
+
+
+
 
 
 
