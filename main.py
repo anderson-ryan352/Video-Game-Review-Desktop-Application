@@ -3,6 +3,7 @@ import mysql.connector
 from mysql.connector import errorcode
 
 
+
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("dark-blue")
 
@@ -10,44 +11,77 @@ ctk.set_default_color_theme("dark-blue")
 class App(ctk.CTk):
 	width = 600
 	height = 400
-	cnx = None
-	cursor = None
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
 		self.title("Video Game Review App")
 		self.geometry(f"{self.width}x{self.height}")
 
 
-		################Login Frame############
-		self.loginFrame = ctk.CTkFrame(self)
-		self.loginFrame.pack(pady=20, padx=60, fill = "both", expand = True)
+		#SQL Connection vars
+		self.cnx = None
+		self.cursor = None
 
 
-		self.loginLabel = ctk.CTkLabel(master=self.loginFrame, text = "Login System", font=('calibre',30,'bold'))
+		#creating frame assigned to container
+		container = ctk.CTkFrame(self, height = 400, width = 600)
+		#frame region
+		container.pack(side="top", fill="both", expand = True)
+
+		#grid location
+		container.grid_rowconfigure(0,weight=1)
+		container.grid_columnconfigure(0,weight=1)
+
+
+		#dictionary of frames
+		self.frames = {}
+		for F in (LoginPage, MainPage, SubmitNewGamePage):
+			frame = F(container, self)
+
+			self.frames[F] = frame
+			frame.grid(row=0,column=0, sticky = "nsew")
+		self.show_frame(LoginPage)
+
+	def show_frame(self, cont):
+		frame = self.frames[cont]
+		frame.tkraise()
+
+	def getCnx(self):
+		return self.cnx
+	def setCnx(self, connection):
+		self.cnx = connection
+	def getCursor(self):
+		return self.cursor
+	def setCursor(self, crsr):
+		self.cursor = crsr	
+
+
+	
+
+
+
+
+class LoginPage(ctk.CTkFrame):
+	def __init__(self, parent, controller):
+		ctk.CTkFrame.__init__(self, parent)
+		self.pack(pady=20,padx=60, fill ="both", expand = True)
+
+		self.loginLabel = ctk.CTkLabel(master=self, text = "Login System", font=('calibre',30,'bold'))
 		self.loginLabel.pack(pady=12, padx=10)
 
-		self.accountEntry = ctk.CTkEntry(master=self.loginFrame, placeholder_text = "Username", font=('calibre',10,'bold'))
+		self.accountEntry = ctk.CTkEntry(master=self, placeholder_text = "Username", font=('calibre',10,'bold'))
 		self.accountEntry.pack(pady=12, padx=10)
 
-		self.passwordEntry = ctk.CTkEntry(master=self.loginFrame, placeholder_text = "Password", font=('calibre',10,'bold'), show="*")
+		self.passwordEntry = ctk.CTkEntry(master=self, placeholder_text = "Password", font=('calibre',10,'bold'), show="*")
 		self.passwordEntry.pack(pady=12, padx=10)
 
-		self.loginButton = ctk.CTkButton(master=self.loginFrame, text = "Login", command = self.loginEvent)
+		self.loginButton = ctk.CTkButton(master=self, text = "Login", command = lambda: self.loginEvent(controller, self.accountEntry.get(), self.passwordEntry.get()))
 		self.loginButton.pack(pady=12, padx=10)
 
-		self.homePage = None
-		self.submitPage = None
 
-
-
-	########Login Event##################
-	def loginEvent(self):
-
-		usr = self.accountEntry.get()
-		pswd = self.passwordEntry.get()
+	def loginEvent(self,controller, account, pswd):
 		try:
 			print("Connecting to database using mysql")
-			cnx = mysql.connector.connect(user=usr,
+			cnx = mysql.connector.connect(user=account,
 											password=pswd,
 											host='localhost',
 											database='videogames')
@@ -61,108 +95,112 @@ class App(ctk.CTk):
 			else:
 				print(err)
 		else:
-
 			#Successful Connection
-			self.cnx = cnx
-			self.cursor = self.cnx.cursor()
-			self.loginFrame.destroy()
-			self.loadHomePage()
-
-	#Connects to mysql database with user input login info
-	def loadHomePage(self):
-		if self.submitPage:
-			self.submitPage.destroy()
-		self.homePage = ctk.CTkFrame(self)
-		self.cursor.reset()
-
-		self.width = 1000
-		self.height = 600
-		self.homePage.pack(pady=20, padx=60, fill = "both", expand = True)
-
-		welcomeLabel = ctk.CTkLabel(master = self.homePage, text = "Welcome!", font = ('calibre',30,'bold'))
-		welcomeLabel.pack(pady=12,padx=10)
-
-		#Successful Connection Test Actions
-		self.cursor.execute("SELECT VERSION()")
-		data = self.cursor.fetchone()
-
-		testVersion = ctk.CTkLabel(master=self.homePage, text = "Database Version: %s " % data, font = ('calibre',10,'bold'))
-		testVersion.pack(pady=12, padx=10)
-
-		#Displaying first game from database
-		self.cursor.execute("SELECT * FROM gamelist")
-
-		
-		data = self.cursor.fetchall()
-		for game in data:
-			testDataLabel = ctk.CTkLabel(master=self.homePage, text = game, font = ('calibre',10,'bold'))
-			testDataLabel.pack(pady=12, padx=10)
-			deleteGameButton = ctk.CTkButton(master=self.homePage, text = "-", command = lambda:self.deleteGame(game))
-			deleteGameButton.pack(pady=0, padx=2)
+			App.setCnx(controller, cnx)
+			App.setCursor(controller, cnx.cursor())
 
 
-		self.newGameButton = ctk.CTkButton(master=self.homePage, text = "Add Game", command = lambda:self.loadSubmitNewGame())
-		self.newGameButton.pack(pady=12, padx=10)
+			MainPage.loadMainPage(controller.frames[MainPage], controller)	
+			App.show_frame(controller, MainPage)
 
-	def deleteGame(self, game):
 
-		self.cursor.reset()
-		remove_game = ("DELETE FROM gamelist WHERE id = %s")
 
-		try:
-			self.cursor.execute(remove_game, (game[0],))
-			self.cnx.commit()
-		except mysql.connector.Error as err:
-			print(err)
-		else:
-			self.homePage.destroy()#refreshing home page
-			self.loadHomePage()
+
+
+
+
+
+class MainPage(ctk.CTkFrame):
+	def __init__(self, parent, controller):
+		ctk.CTkFrame.__init__(self,parent)
+		self.parent = parent
+		label= ctk.CTkLabel(self,text="Main Page")
+		label.pack(padx=10, pady=10)
 		
 
-	def loadSubmitNewGame(self):
-		self.homePage.destroy()
-		self.submitPage = ctk.CTkFrame(self)
+		self.testVersion = ctk.CTkLabel(master = self, text = "", font = ('calibre',10,'bold'))
+		self.testVersion.pack(padx=10, pady=10)
 
-		self.submitPage.pack(pady=20, padx=60, fill = "both", expand = True)
+		self.gameList = ctk.CTkLabel(master = self, text = "", font = ('calibre',12,'bold'))
+		self.gameList.pack(padx=10, pady=10)
 
-		label = ctk.CTkLabel(master = self.submitPage, text = "Add Game to Database")
-		gameNameEntry = ctk.CTkEntry(master = self.submitPage, placeholder_text = "Game Name", font=('calibre',10,'bold'))
-		gameNameEntry.pack(pady=12, padx=10)
 
-		platformEntry = ctk.CTkEntry(master = self.submitPage, placeholder_text = "Platform", font=('calibre',10,'bold'))
-		platformEntry.pack(pady=12, padx=10)
+		submitNewGameButton = ctk.CTkButton(self,
+										text = "Submit new game",
+										command=lambda: App.show_frame(controller, SubmitNewGamePage),
+										)
+		submitNewGameButton.pack(side="bottom", fill=ctk.X)
 
-		releaseYearEntry = ctk.CTkEntry(master = self.submitPage, placeholder_text = "Release Year", font=('calibre',10,'bold'))
-		releaseYearEntry.pack(pady=12, padx=10)
+	def loadMainPage(self, controller):
+		if App.getCnx(controller):
+			curs = App.getCursor(controller)
+			curs.execute("SELECT VERSION()")
+			dataVer = curs.fetchone()
+			self.testVersion.configure(text= "Database Version: %s " % dataVer)
 
-		submitButton = ctk.CTkButton(master = self.submitPage, text = "Submit", command = lambda:self.submitNewGame(gameNameEntry.get(), platformEntry.get(), releaseYearEntry.get()))
+			curs.execute("SELECT * FROM gamelist")
+
+			gameData = curs.fetchall()
+			strText = []
+			for game in gameData:
+				strText.append(game)
+				strText.append("\n\n")
+				
+			self.gameList.configure(text = strText)
+
+
+
+
+
+
+
+
+class SubmitNewGamePage(ctk.CTkFrame):
+	def __init__(self, parent, controller):
+		ctk.CTkFrame.__init__(self, parent)
+		self.parent = parent
+
+		label = ctk.CTkLabel(self, text="This is the Side Page")
+		label.pack(padx=10, pady=10)
+
+
+		self.gameNameEntry = ctk.CTkEntry(master = self, placeholder_text= "Game Name", font=('calibre',10,'bold'))
+		self.gameNameEntry.pack(pady=12, padx=10)
+
+		self.platformEntry = ctk.CTkEntry(master=self, placeholder_text="Platform",font=('calibre',10,'bold'))
+		self.platformEntry.pack(pady=12,padx=10)
+
+		self.releaseYearEntry = ctk.CTkEntry(master=self, placeholder_text="Release Year", font=('calibre',10,'bold'))
+		self.releaseYearEntry.pack(pady=12,padx=10)
+
+		submitButton = ctk.CTkButton(master = self, text = "Submit", command = lambda:self.addGameToDatabase(controller, self.gameNameEntry.get(), self.platformEntry.get(), self.releaseYearEntry.get()))
 		submitButton.pack(pady=12, padx=10)
 
+		backButton = ctk.CTkButton(
+			self,
+			text="Go to Main Page",
+			command=lambda: App.show_frame(controller, MainPage),
+		)
+		backButton.pack(side="bottom", fill=ctk.X)
 
-		backButton = ctk.CTkButton(master = self.submitPage, text = "Back", command = lambda: self.loadHomePage())
-		backButton.pack(pady=12, padx=10)
 
+	def addGameToDatabase(self, controller, name, platform, releaseYear):
+		if App.getCnx(controller):
+			gameData = (name, platform, releaseYear)
+			add_Game = ("INSERT INTO gamelist "
+						"(name, platform, release_year) "
+						"VALUES (%s, %s, %s)")
+			try:
+				curs = App.getCursor(controller)
+				curs.execute(add_Game, gameData)
+				controller.cnx.commit()
 
-
-	def submitNewGame(self, name, platform, year):
-		self.cursor.reset()
-		gameData = (name, platform, year)
-		add_Game = ("INSERT INTO gamelist "
-					"(name, platform, release_year) "
-					"VALUES (%s, %s, %s)")
-		try:
-			self.cursor.execute(add_Game, gameData)
-			self.cnx.commit()
-
-		except mysql.connector.Error as err:
-			print(err)
-		else:
-			self.submitPage.destroy()
-			self.loadHomePage()
-
-	def clearWidgets(self, frame):
-		for widget in frame.winfo_children():
-			widget.destroy()
+			except mysql.connector.Error as err:
+				print(err)
+			else:
+				MainPage.loadMainPage(controller.frames[MainPage], controller)	
+				App.show_frame(controller, MainPage)
+		
 
 
 if __name__ == "__main__":
