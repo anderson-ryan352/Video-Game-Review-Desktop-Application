@@ -34,7 +34,7 @@ class App(ctk.CTk):
 
 		#dictionary of frames
 		self.frames = {}
-		for F in (LoginPage, MainPage, SubmitNewGamePage):
+		for F in (LoginPage, MainPage, SubmitNewGamePage, GameProfilePage):
 			frame = F(container, self)
 
 			self.frames[F] = frame
@@ -121,8 +121,7 @@ class MainPage(ctk.CTkFrame):
 		self.testVersion = ctk.CTkLabel(master = self, text = "", font = ('calibre',10,'bold'))
 		self.testVersion.pack(padx=10, pady=10)
 
-		self.gameList = ctk.CTkLabel(master = self, text = "", font = ('calibre',12,'bold'))
-		self.gameList.pack(padx=10, pady=10)
+
 
 
 		submitNewGameButton = ctk.CTkButton(self,
@@ -143,10 +142,9 @@ class MainPage(ctk.CTkFrame):
 			gameData = curs.fetchall()
 			strText = []
 			for game in gameData:
-				strText.append(game)
-				strText.append("\n\n")
-				
-			self.gameList.configure(text = strText)
+				gameLabel = ctk.CTkLabel(master = self, text = game, font = ('calibre',10,'bold'))
+				gameLabel.pack(padx=10,pady=10)
+
 
 
 
@@ -160,7 +158,7 @@ class SubmitNewGamePage(ctk.CTkFrame):
 		ctk.CTkFrame.__init__(self, parent)
 		self.parent = parent
 
-		label = ctk.CTkLabel(self, text="This is the Side Page")
+		label = ctk.CTkLabel(self, text="Submit New Game")
 		label.pack(padx=10, pady=10)
 
 
@@ -200,7 +198,30 @@ class SubmitNewGamePage(ctk.CTkFrame):
 			else:
 				MainPage.loadMainPage(controller.frames[MainPage], controller)	
 				App.show_frame(controller, MainPage)
-		
+
+
+class GameProfilePage(ctk.CTkFrame):
+	def __init__(self, parent, controller):
+		ctk.CTkFrame.__init__(self, parent)
+		self.parent = parent
+
+		self.gameTitleLabel = ctk.CTkLabel(master=self, text = "", font=('calibre',30,'bold'))
+		self.gameTitleLabel.pack(pady=12, padx=10)
+
+		self.platformLabel = ctk.CTkLabel(master=self, text = "", font=('calibre',30,'bold'))
+		self.platformLabel.pack(pady=12, padx=10)
+
+		self.releaseYearLabel = ctk.CTkLabel(master=self, text = "", font=('calibre',30,'bold'))
+		self.releaseYearLabel.pack(pady=12, padx=10)
+
+		backButton = ctk.CTkButton(
+			self,
+			text="Go to Main Page",
+			command=lambda: App.show_frame(controller, MainPage),
+		)
+		backButton.pack(side="bottom", fill=ctk.X)
+
+
 
 
 if __name__ == "__main__":
