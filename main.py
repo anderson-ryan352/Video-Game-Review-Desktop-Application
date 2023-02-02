@@ -101,7 +101,6 @@ class LoginPage(ctk.CTkFrame):
 
 
 			MainPage.loadMainPage(controller.frames[MainPage], controller)	
-			App.show_frame(controller, MainPage)
 
 
 
@@ -158,6 +157,7 @@ class MainPage(ctk.CTkFrame):
 				self.gameProfileButton.grid(row = self.r, column = self.c)
 
 				self.r +=1
+			App.show_frame(controller, MainPage)
 
 
 
@@ -260,8 +260,6 @@ class GameProfilePage(ctk.CTkFrame):
 				MainPage.loadMainPage(controller.frames[MainPage], controller)
 				App.show_frame(controller, MainPage)
 				
-
-
 
 	def loadGameProfilePage(self, controller, game):
 		if App.getCnx(controller):
