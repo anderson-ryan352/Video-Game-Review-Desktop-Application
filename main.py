@@ -49,10 +49,10 @@ class App(ctk.CTk):
 		return self.cnx
 	def setCnx(self, connection):
 		self.cnx = connection
-	def getCursor(self):
-		return self.cursor
-	def setCursor(self, crsr):
-		self.cursor = crsr	
+	#def getCursor(self):
+	#	return self.cursor
+	#def setCursor(self, crsr):
+	#	self.cursor = crsr	
 
 
 	
@@ -97,7 +97,7 @@ class LoginPage(ctk.CTkFrame):
 		else:
 			#Successful Connection
 			App.setCnx(controller, cnx)
-			App.setCursor(controller, cnx.cursor())
+			#App.setCursor(controller, cnx.cursor())
 
 
 			MainPage.loadMainPage(controller.frames[MainPage], controller)	
@@ -138,7 +138,10 @@ class MainPage(ctk.CTkFrame):
 				if widgets == self.gameProfileButton:
 					widgets.destroy()
 
-			curs = App.getCursor(controller)
+			conn = App.getCnx(controller)
+			#conn.Open()
+
+			curs = conn.cursor()
 			curs.execute("SELECT VERSION()")
 
 			dataVer = curs.fetchone()
@@ -157,6 +160,7 @@ class MainPage(ctk.CTkFrame):
 				self.gameProfileButton.grid(row = self.r, column = self.c)
 
 				self.r +=1
+			curs.close()
 			App.show_frame(controller, MainPage)
 
 
@@ -198,22 +202,44 @@ class SubmitNewGamePage(ctk.CTkFrame):
 						"(name, platform, release_year) "
 						"VALUES (%s, %s, %s)")
 			try:
-				curs = App.getCursor(controller)
+				curs = App.getCnx(controller).cursor()
 				curs.execute(add_Game, gameData)
 				controller.cnx.commit()
+				curs.close()
 
 			except mysql.connector.Error as err:
 				print(err)
 			else:
+
+				#resetting entry text on successful submit
+				self.gameNameEntry.delete(0, 'end')
+				self.platformEntry.delete(0, 'end')
+				self.releaseYearEntry.delete(0, 'end')
+
 				MainPage.loadMainPage(controller.frames[MainPage], controller)	
 				App.show_frame(controller, MainPage)
+
+########PICTURE#########
+#GameName			Oth
+#Created by			er
+#Company			pic
+#Year		Trailer	
+#DESCRIPTION############
+########################
+#		AD TEST
+#######################
+#Ratings
+# a r t				SCORE
+
+
+
 
 
 class GameProfilePage(ctk.CTkFrame):
 	def __init__(self, parent, controller):
 		ctk.CTkFrame.__init__(self, parent)
 		self.parent = parent
-
+		
 		self.gameTitleLabel = ctk.CTkLabel(master=self, text = "", font=('calibre',30,'bold'))
 		self.gameTitleLabel.pack(pady=12, padx=10)
 
@@ -250,9 +276,10 @@ class GameProfilePage(ctk.CTkFrame):
 		if App.getCnx(controller):
 			remove_game = ("DELETE FROM gamelist WHERE id = %s")
 			try:
-				curs = App.getCursor(controller)
+				curs = App.getCnx(controller).cursor()
 				curs.execute(remove_game, (game,))
 				controller.cnx.commit()
+				curs.close()
 
 			except mysql.connector.Error as err:
 				print(err)
