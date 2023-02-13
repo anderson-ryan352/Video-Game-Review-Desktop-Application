@@ -1,6 +1,8 @@
 import customtkinter as ctk
 import mysql.connector
+from mysql.connector import pooling
 from mysql.connector import errorcode
+import time
 
 
 
@@ -79,6 +81,8 @@ class LoginPage(ctk.CTkFrame):
 
 
 	def loginEvent(self,controller, account, pswd):
+
+		
 		try:
 			print("Connecting to database using mysql")
 			cnx = mysql.connector.connect(user=account,
